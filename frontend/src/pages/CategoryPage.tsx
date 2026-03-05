@@ -26,29 +26,30 @@ const CategoryPage: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      fetchCategoryLinks();
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          // 获取分类信息
+          const categoryResponse = await axios.get(`http://localhost:8080/api/categories`);
+          const category = categoryResponse.data.find((cat: any) => cat.id === parseInt(id || '0'));
+          if (category) {
+            setCategoryName(category.name);
+          }
+          
+          // 获取链接
+          const linksResponse = await axios.get(`http://localhost:8080/api/links/category/${id}`);
+          setLinks(linksResponse.data);
+        } catch (error) {
+          console.error('获取链接失败:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
     }
   }, [id]);
 
-  const fetchCategoryLinks = async () => {
-    try {
-      setLoading(true);
-      // 获取分类信息
-      const categoryResponse = await axios.get(`http://localhost:8080/api/categories`);
-      const category = categoryResponse.data.find((cat: any) => cat.id === parseInt(id));
-      if (category) {
-        setCategoryName(category.name);
-      }
-      
-      // 获取链接
-      const linksResponse = await axios.get(`http://localhost:8080/api/links/category/${id}`);
-      setLinks(linksResponse.data);
-    } catch (error) {
-      console.error('获取链接失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleLinkClick = async (linkId: number, url: string) => {
     try {

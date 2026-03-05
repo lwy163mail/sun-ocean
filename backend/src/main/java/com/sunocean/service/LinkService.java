@@ -5,16 +5,19 @@ import com.sunocean.entity.Category;
 import com.sunocean.entity.Link;
 import com.sunocean.repository.CategoryRepository;
 import com.sunocean.repository.LinkRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class LinkService {
     private final LinkRepository linkRepository;
     private final CategoryRepository categoryRepository;
+    
+    public LinkService(LinkRepository linkRepository, CategoryRepository categoryRepository) {
+        this.linkRepository = linkRepository;
+        this.categoryRepository = categoryRepository;
+    }
     
     public List<LinkDTO> getAllLinks() {
         return linkRepository.findAllByOrderBySortOrderAsc().stream()

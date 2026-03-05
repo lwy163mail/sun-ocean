@@ -2,17 +2,19 @@ package com.sunocean.controller;
 
 import com.sunocean.dto.LinkDTO;
 import com.sunocean.service.LinkService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/links")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class LinkController {
     private final LinkService linkService;
+    
+    public LinkController(LinkService linkService) {
+        this.linkService = linkService;
+    }
     
     @GetMapping
     public ResponseEntity<List<LinkDTO>> getAllLinks() {

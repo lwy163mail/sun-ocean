@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sun Ocean 错误测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #1890ff;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+        }
+        .success {
+            color: #52c41a;
+            font-weight: bold;
+        }
+        .error {
+            color: #f5222d;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        .log {
+            background: #fafafa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Sun Ocean 错误诊断</h1>
+        
+        <div class="test-section">
+            <h3>1. 基础连接测试</h3>
+            <button onclick="testConnection()">测试连接</button>
+            <div id="connection-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. API 测试</h3>
+            <button onclick="testAPI()">测试后端API</button>
+            <div id="api-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. JavaScript 错误检查</h3>
+            <button onclick="checkJSErrors()">检查JS错误</button>
+            <div id="js-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. 快速操作</h3>
+            <button onclick="window.open('http://localhost:3000', '_blank')">打开主应用</button>
+            <button onclick="window.open('http://localhost:8080/api/categories', '_blank')">测试API端点</button>
+            <button onclick="clearCache()">清除缓存</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>5. 服务状态</h3>
+            <div id="service-status">检查中...</div>
+        </div>
+    </div>
+    
+    <script>
+        async function testConnection() {
+            const result = document.getElementById('connection-result');
+            result.innerHTML = '测试中...';
+            
+            try {
+                const response = await fetch('http://localhost:3000');
+                if (response.ok) {
+                    result.innerHTML = '<span class="success">✅ 前端服务连接正常</span>';
+                    const html = await response.text();
+                    const hasReact = html.includes('React App') || html.includes('root');
+                    result.innerHTML += `<br><span class="${hasReact ? 'success' : 'error'}">${hasReact ? '✅ React应用检测到' : '❌ React应用未检测到'}</span>`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ 连接失败: ${response.status} ${response.statusText}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ 连接错误: ${error.message}</span>`;
+            }
+        }
+        
+        async function testAPI() {
+            const result = document.getElementById('api-result');
+            result.innerHTML = '测试中...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/categories');
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `<span class="success">✅ 后端API正常 (${data.length}个分类)</span>`;
+                    result.innerHTML += `<div class="log">${JSON.stringify(data, null, 2)}</div>`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ API失败: ${response.status} ${response.statusText}</span>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ API错误: ${error.message}</span>`;
+            }
+        }
+        
+        function checkJSErrors() {
+            const result = document.getElementById('js-result');
+            result.innerHTML = '正在检查...';
+            
+            // 尝试访问主应用的JavaScript
+            const script = document.createElement('script');
+            script.src = 'http://localhost:3000/static/js/main.js';
+            script.onload = () => {
+                result.innerHTML = '<span class="success">✅ JavaScript加载正常</span>';
+            };
+            script.onerror = () => {
+                result.innerHTML = '<span class="error">❌ JavaScript加载失败</span>';
+            };
+            document.head.appendChild(script);
+        }
+        
+        function clearCache() {
+            if (confirm('确定要清除浏览器缓存吗？')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                caches.keys().then(keys => {
+                    keys.forEach(key => caches.delete(key));
+                });
+                alert('缓存已清除，请刷新页面');
+            }
+        }
+        
+        // 自动检查服务状态
+        window.onload = async () => {
+            const status = document.getElementById('service-status');
+            
+            // 检查前端
+            let frontendOk = false;
+            try {
+                const frontendRes = await fetch('http://localhost:3000');
+                frontendOk = frontendRes.ok;
+            } catch {}
+            
+            // 检查后端
+            let backendOk = false;
+            try {
+                const backendRes = await fetch('http://localhost:8080/api/categories');
+                backendOk = backendRes.ok;
+            } catch {}
+            
+            status.innerHTML = `
+                <div>前端服务: <span class="${frontendOk ? 'success' : 'error'}">${frontendOk ? '✅ 正常' : '❌ 异常'}</span></div>
+                <div>后端API: <span class="${backendOk ? 'success' : 'error'}">${backendOk ? '✅ 正常' : '❌ 异常'}</span></div>
+                <div>当前时间: ${new Date().toLocaleTimeString()}</div>
+            `;
+        };
+    </script>
+</body>
+</html>
